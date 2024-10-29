@@ -6,7 +6,7 @@ from app import app, db
 from datetime import datetime
 from app.models import Attendee, Conference, Notification
 from flask import render_template, session, request, redirect, url_for, flash, make_response, session
-from azure.servicebus import Message
+from azure.servicebus import ServiceBusClient, ServiceBusMessage
 import logging
 
 def get_queue_client(): 
@@ -72,7 +72,7 @@ def notification():
             db.session.add(notification)
             db.session.commit()
             
-            message = Message(str(notification.id))
+            message = ServiceBusMessage(str(notification.id))
             queue_client = get_queue_client()
             queue_client.send(message)
             ##################################################
