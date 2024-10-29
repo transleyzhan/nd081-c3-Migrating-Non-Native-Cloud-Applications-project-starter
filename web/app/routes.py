@@ -2,12 +2,15 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import os
 import smtplib
-from app import app, db, queue_client
+from app import app, db
 from datetime import datetime
 from app.models import Attendee, Conference, Notification
 from flask import render_template, session, request, redirect, url_for, flash, make_response, session
 from azure.servicebus import Message
 import logging
+
+def get_queue_client(): 
+    return app.service_bus_client.get_queue_sender(app.config['SERVICE_BUS_QUEUE_NAME'])
 
 @app.route('/')
 def index():
@@ -70,6 +73,7 @@ def notification():
             db.session.commit()
             
             message = Message(str(notification.id))
+            queue_client = get_queue_client()
             queue_client.send(message)
             ##################################################
             ## TODO: Refactor This logic into an Azure Function
