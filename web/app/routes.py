@@ -1,10 +1,12 @@
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import os
+import smtplib
 from app import app, db, queue_client
 from datetime import datetime
 from app.models import Attendee, Conference, Notification
 from flask import render_template, session, request, redirect, url_for, flash, make_response, session
 from azure.servicebus import Message
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
 import logging
 
 @app.route('/')
@@ -66,7 +68,9 @@ def notification():
         try:
             db.session.add(notification)
             db.session.commit()
-
+            
+            message = Message(str(notification.id))
+            queue_client.send(message)
             ##################################################
             ## TODO: Refactor This logic into an Azure Function
             ## Code below will be replaced by a message queue
@@ -74,14 +78,14 @@ def notification():
             attendees = Attendee.query.all()
 
             for attendee in attendees:
-                subject = '{}: {}'.format(attendee.first_name, notification.subject)
+                subject = '{} {}: {}'.format(attendee.first_name, attendee.last_name, notification.subject)
                 send_email(attendee.email, subject, notification.message)
 
             notification.completed_date = datetime.utcnow()
             notification.status = 'Notified {} attendees'.format(len(attendees))
             db.session.commit()
             # TODO Call servicebus queue_client to enqueue notification ID
-
+            
             #################################################
             ## END of TODO
             #################################################
@@ -96,12 +100,27 @@ def notification():
 
 
 def send_email(email, subject, body):
-    if not app.config.get('SENDGRID_API_KEY'):
-        message = Mail(
-            from_email=app.config.get('ADMIN_EMAIL_ADDRESS'),
-            to_emails=email,
-            subject=subject,
-            plain_text_content=body)
-
-        sg = SendGridAPIClient(app.config.get('SENDGRID_API_KEY'))
-        sg.send(message)
+    smtp_server = os.getenv("SMTP_HOST")
+    smtp_port = os.getenv("SMTP_PORT")
+    smtp_email = os.getenv("SMTP_EMAIL")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    message = MIMEMultipart()
+    message['From'] = smtp_email
+    message['To'] = email
+    message['Subject'] = subject
+    message.attach(MIMEText(body, 'plain'))
+    
+    try:
+        # Connect to the Gmail SMTP server
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()        
+        # Log in to your account
+        server.login(smtp_email, smtp_password)        
+        # Send the email
+        server.sendmail(smtp_email, email, message.as_string())        
+        # Disconnect from the server
+        server.quit()
+        
+        logging.info("Function - send_email: send_email successfully.")
+    except Exception as e:
+        logging.error(f"Function - send_email:>>> send_email failed: {e}")
