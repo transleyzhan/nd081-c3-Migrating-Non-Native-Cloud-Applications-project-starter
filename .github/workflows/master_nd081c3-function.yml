@@ -68,4 +68,4 @@ jobs:
           app-name: 'nd081c3-function'
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_6B6C40AFA5B54B5BBAEDC974614D2E10 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_53E340B7E13245D69CF131223D5E317C }}
