@@ -61,11 +61,16 @@ You will need to install the following locally:
 ## Monthly Cost Analysis
 Complete a month cost analysis of each Azure resource to give an estimate total cost using the table below:
 
-| Azure Resource | Service Tier | Monthly Cost |
-| ------------ | ------------ | ------------ |
-| *Azure Postgres Database* |     |              |
-| *Azure Service Bus*   |         |              |
-| ...                   |         |              |
+| Azure Resource            | Service Tier                           | Monthly Cost                         |
+| ------------------------- | -------------------------------------- | ------------------------------------ |
+| *Azure Postgres Database* | Burstable                              |  $16.09                              |
+| *Azure Service Bus*       | Basic                                  |  $0.05 per 1M operations per 1 month |
+| *Azure Storage account*   | Standard performance - Cool tier       |  $0.01 per GB per month              |
+| *Azure App Service*       | Basic (B1)                             |  $12,41                              |
+| *Azure Function*          | EP1                                    |  vCPU: $116.80 vCPU/month            |
+
 
 ## Architecture Explanation
 This is a placeholder section where you can provide an explanation and reasoning for your architecture selection for both the Azure Web App and Azure Function.
+Implementing a service bus namespace for notifications is a smart choice compared to Event Grid or Event Hub, as it balances efficiency and cost. 
+The basic service bus plan is affordable. For optimal performance, I recommend the B1 plan for the app service, along with burstable and premium SSDs for the Azure PostgreSQL flexible database and a consumption plan for the function app. Choosing a premium plan for the function app enhance our performance.
