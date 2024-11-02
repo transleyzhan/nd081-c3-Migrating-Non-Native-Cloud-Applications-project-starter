@@ -60,7 +60,7 @@ You will need to install the following locally:
 
 ## Monthly Cost Analysis
 Complete a month cost analysis of each Azure resource to give an estimate total cost using the table below:
-
+**Testing & development**
 | Azure Resource            | Service Tier                           | Monthly Cost                         |
 | ------------------------- | -------------------------------------- | ------------------------------------ |
 | *Azure Postgres Database* | Burstable                              |  $16.09                              |
@@ -69,8 +69,36 @@ Complete a month cost analysis of each Azure resource to give an estimate total 
 | *Azure App Service*       | Basic (B1)                             |  $12,41                              |
 | *Azure Function*          | EP1                                    |  vCPU: $116.80 vCPU/month            |
 
+**Production-level environment**
+| Azure Resource            | Service Tier                           | Monthly Cost                         |
+| ------------------------- | -------------------------------------- | ------------------------------------ |
+| *Azure Postgres Database* | Flexible (GP_Gen5_2)                   |  $226.92                             |
+| *Azure Service Bus*       | Standard                               |  $10.80 per 1M operations per month  |
+| *Azure Storage account*   | Standard performance - Hot tier        |  $0.144                              |
+| *Azure App Service*       | Premium (P1v3)                         |  $93.80                              |
+| *Azure Function*          | EP1                                    |  vCPU: $116.80 vCPU/month            |
+
+Explain:
++ Azure Postgres Database - Flexible GP_Gen5_2: Provides better performance and scalability
++ Azure Service Bus - Standard: High messages
++ Azure Storage Account - Standard performance + Hot tier: Cost-effective storage for accessed data
++ Azure App Service - Premium P1v3: Offers better performance and scalability.
++ Azure Function - EP1: Ensures reliable and scalable function execution
 
 ## Architecture Explanation
 This is a placeholder section where you can provide an explanation and reasoning for your architecture selection for both the Azure Web App and Azure Function.
-Implementing a service bus namespace for notifications is a smart choice compared to Event Grid or Event Hub, as it balances efficiency and cost. 
-The basic service bus plan is affordable. For optimal performance, I recommend the B1 plan for the app service, along with burstable and premium SSDs for the Azure PostgreSQL flexible database and a consumption plan for the function app. Choosing a premium plan for the function app enhance our performance.
+
+**Drawbacks of Previous Architecture**
+In the previous project, email notifications sent directly through the web app. This design has issues when dealing with a large number of attendees
++ Timeout Errors: Users can wait on the notification page for emails to be sent to 1000+ attendees, can have many timeout errors
++ Performance: The web app became a single point of failure for email processing, degrading overall performance
+
+**Advantages of the Current Architecture**
+The current architecture utilizes Azure services to improve functionality:
++ Azure Functions: Reducing load and timeout errors.  
++ Service Bus Queue: Manages notifications efficiently, can handle email processing without system overload
++ Scalability: Scale independently, enhancing performance and reliability
+
+**Explain the Azure resources used in the current architecture to overcome the drawbacks**
+1. Azure Service Bus: A messaging service ensures delivery of messages and allows for the decoupling of components.
+2. Azure Database for PostgreSQL: high availability and scalability with many features
